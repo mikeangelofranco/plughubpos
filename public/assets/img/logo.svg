@@ -1,0 +1,26 @@
+<svg width="320" height="360" viewBox="0 0 320 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g1" x1="40" y1="20" x2="240" y2="180" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1f6feb"/>
+      <stop offset="1" stop-color="#0f4eb3"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="110" y1="120" x2="230" y2="260" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#dfe8ff" stop-opacity="0.9"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#0b1f3f" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <rect x="70" y="30" width="170" height="300" rx="26" fill="url(#g1)" filter="url(#shadow)"/>
+  <rect x="90" y="60" width="130" height="80" rx="12" fill="#0e356b" opacity="0.65"/>
+  <rect x="60" y="100" width="200" height="160" rx="18" fill="#fff" filter="url(#shadow)"/>
+  <rect x="75" y="122" width="170" height="70" rx="12" fill="#12284d" opacity="0.05"/>
+  <rect x="85" y="210" width="150" height="16" rx="8" fill="#d0d9f0"/>
+  <rect x="110" y="232" width="100" height="12" rx="6" fill="#d0d9f0"/>
+  <text x="90" y="175" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="800" fill="#12284d">Plug</text>
+  <text x="170" y="175" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="800" fill="#d32f2f">Hub</text>
+  <text x="120" y="205" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#1f6feb">POS</text>
+  <rect x="150" y="40" width="30" height="6" rx="3" fill="#d7e5ff" opacity="0.9"/>
+  <rect x="140" y="314" width="50" height="8" rx="4" fill="#0e356b" opacity="0.85"/>
+</svg>

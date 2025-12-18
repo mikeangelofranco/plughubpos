@@ -2,10 +2,53 @@ create table if not exists users (
   id bigserial primary key,
   username text not null unique,
   password_hash text not null,
-  role text not null default 'cashier',
+  role text not null default 'User',
   active boolean not null default true,
   created_at timestamptz not null default now()
 );
+
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'users_role_chk') then
+    alter table users add constraint users_role_chk check (role in ('Manager','User'));
+  end if;
+exception when others then
+  -- ignore (e.g., insufficient privileges or older schema state)
+  null;
+end
+$$;
+
+-- Default admin user (Manager role):
+--   username: admin
+--   password: Cablet0w
+insert into users (username, password_hash, role, active)
+values ('admin', '$2y$10$VgP/nNQc/.QaisFpgfrJQemVobXWUrjJbnTG.KdJ4hiCdkdTH863O', 'Manager', true)
+on conflict (username) do update
+set password_hash = excluded.password_hash,
+    role = excluded.role,
+    active = excluded.active;
+
+-- Seed categories and products for demo UX
+insert into categories (name) values
+  ('Beverages'),
+  ('Bakery'),
+  ('Snacks'),
+  ('Essentials')
+on conflict (name) do nothing;
+
+insert into products (sku, name, category_id, price_cents, active)
+values
+  ('COKE-50', 'Coke 50cl', (select id from categories where name = 'Beverages'), 45000, true),
+  ('WATER-50', 'Bottled Water', (select id from categories where name = 'Beverages'), 25000, true),
+  ('BREAD-S', 'Bread (Small)', (select id from categories where name = 'Bakery'), 70000, true),
+  ('SNACK-01', 'Chin-Chin', (select id from categories where name = 'Snacks'), 60000, true),
+  ('MILK-1L', 'Milk 1L', (select id from categories where name = 'Essentials'), 180000, true),
+  ('SUGAR-500', 'Sugar 500g', (select id from categories where name = 'Essentials'), 90000, true)
+on conflict (sku) do update
+set name = excluded.name,
+    category_id = excluded.category_id,
+    price_cents = excluded.price_cents,
+    active = excluded.active;
 
 create table if not exists categories (
   id bigserial primary key,
@@ -63,4 +106,3 @@ create table if not exists payments (
 );
 
 create index if not exists payments_order_id_idx on payments(order_id);
-

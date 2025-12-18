@@ -43,3 +43,9 @@ function view(string $name, array $data = []): string
     return (string) ob_get_clean();
 }
 
+function redirect(string $to): never
+{
+    header('Location: ' . $to, true, 302);
+    exit;
+}
+

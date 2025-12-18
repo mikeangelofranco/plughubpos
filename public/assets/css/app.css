@@ -1,0 +1,208 @@
+:root{
+  --bg:#ffffff;
+  --text:#2b2b2b;
+  --muted:#6b6b6b;
+  --primary:#1f6feb;
+  --primary-pressed:#1a5ecc;
+  --danger:#d32f2f;
+  --card:#f6f7f9;
+  --border:#e7e7e7;
+  --shadow:0 10px 30px rgba(0,0,0,.08);
+
+  --radius:16px;
+  --radius-sm:12px;
+  --gap:12px;
+  --pad:14px;
+  --max:520px;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+a{color:var(--primary);text-decoration:none}
+
+.app{
+  min-height:100%;
+  display:flex;
+  justify-content:center;
+  padding:clamp(10px,3vw,18px);
+}
+.shell{
+  width:100%;
+  max-width:var(--max);
+  display:flex;
+  flex-direction:column;
+  gap:var(--gap);
+}
+
+.topbar{
+  position:sticky;
+  top:0;
+  background:rgba(255,255,255,.9);
+  backdrop-filter:saturate(180%) blur(12px);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:var(--pad);
+  box-shadow:var(--shadow);
+  z-index:10;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.brand h1{
+  font-size:16px;
+  margin:0;
+  letter-spacing:.2px;
+}
+.pill{
+  font-size:12px;
+  color:var(--muted);
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:6px 10px;
+  background:#fff;
+}
+
+.search{
+  margin-top:10px;
+  display:flex;
+  gap:10px;
+}
+.input{
+  flex:1;
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:12px 12px;
+  font-size:15px;
+  outline:none;
+  background:#fff;
+}
+.input:focus{border-color:color-mix(in srgb, var(--primary) 55%, var(--border))}
+
+.btn{
+  border:0;
+  border-radius:var(--radius-sm);
+  padding:12px 14px;
+  font-weight:650;
+  font-size:14px;
+  cursor:pointer;
+  user-select:none;
+}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:active{background:var(--primary-pressed)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-ghost{
+  background:#fff;
+  border:1px solid var(--border);
+  color:var(--text);
+}
+
+.content{
+  display:flex;
+  flex-direction:column;
+  gap:var(--gap);
+  padding-bottom:90px;
+}
+
+.panel{
+  border:1px solid var(--border);
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:var(--pad);
+}
+.panel h2{
+  margin:0 0 10px 0;
+  font-size:14px;
+  color:var(--muted);
+  letter-spacing:.2px;
+  font-weight:650;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:10px;
+}
+@media (min-width:420px){
+  .grid{grid-template-columns:repeat(3, minmax(0, 1fr))}
+}
+
+.tile{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:12px;
+  box-shadow:0 1px 0 rgba(0,0,0,.02);
+}
+.tile .name{font-weight:700;font-size:14px}
+.tile .meta{margin-top:6px;color:var(--muted);font-size:12px;display:flex;justify-content:space-between}
+.tile .price{color:var(--text);font-weight:750}
+.tile button{margin-top:10px;width:100%}
+
+.cartbar{
+  position:fixed;
+  left:0; right:0; bottom:0;
+  padding:12px;
+  padding-bottom:calc(12px + env(safe-area-inset-bottom));
+  display:flex;
+  justify-content:center;
+  background:linear-gradient(to top, rgba(255,255,255,1), rgba(255,255,255,.6));
+  border-top:1px solid var(--border);
+}
+.cartbar-inner{
+  width:100%;
+  max-width:var(--max);
+  display:flex;
+  gap:10px;
+}
+.cart-summary{
+  flex:1;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:12px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.cart-summary .small{color:var(--muted);font-size:12px}
+.cart-summary .total{font-weight:800}
+
+.cart{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.line{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:space-between;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:10px 10px;
+}
+.line .left{min-width:0}
+.line .title{font-weight:750;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.line .sub{font-size:12px;color:var(--muted)}
+.qty{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.qty button{
+  width:34px;
+  height:34px;
+  padding:0;
+  border-radius:12px;
+}
+.qty .num{min-width:22px;text-align:center;font-weight:800}

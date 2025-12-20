@@ -21,6 +21,11 @@
 - Default user is seeded by `scripts/schema.sql`: `admin` / `Cablet0w` (change/remove for production).
 - Login URL: `http://127.0.0.1:8000/login`
 
+## Roles & tenants
+- Multi-tenant aware: Admin (cross-tenant), Manager (per-tenant full control), Cashier (sell flow), Readonly (view only).
+- Schema seeds helpers for the default tenant: `manager` / `cashier` / `readonly` (all `Cablet0w` by default).
+- Admin can switch tenant scopes from the top bar; non-admin roles are pinned to their tenant.
+
 ## Branding
 - Logo used across screens lives at `public/assets/img/logo.svg` (PNG fallback optional).
   - Replace that file with your provided logo to update branding.

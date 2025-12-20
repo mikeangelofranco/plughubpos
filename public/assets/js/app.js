@@ -1,4 +1,8 @@
 (() => {
+  const ctx = window.__APP_CTX__ || {};
+  const ctxRole = String(ctx.role || "");
+  const isReadonly = Boolean(ctx.is_readonly) || ctxRole.toLowerCase() === "readonly";
+
   const money = (cents) => (cents / 100).toLocaleString(undefined, { style: "currency", currency: "PHP" });
 
   const fallbackProducts = [
@@ -24,6 +28,19 @@
     categories: fallbackCategories,
     products: fallbackProducts,
     discount: 0, // in cents
+    paymentMethod: "cash",
+    cashAmount: 0, // in cents
+  };
+
+  const salesLocked = isReadonly;
+  let readonlyNotified = false;
+  const guardSales = () => {
+    if (!salesLocked) return false;
+    if (!readonlyNotified) {
+      alert("Read-only role: sales actions are disabled.");
+      readonlyNotified = true;
+    }
+    return true;
   };
 
   const categoryColors = {
@@ -54,12 +71,93 @@
     discountDec: document.querySelector("[data-discount-dec]"),
     menuOpen: document.querySelector("[data-menu-open]"),
     menuDropdown: document.querySelector("[data-menu-dropdown]"),
+    posScreen: document.querySelector("[data-pos-screen]"),
+    checkoutScreen: document.querySelector("[data-checkout-screen]"),
+    startCheckout: document.querySelector("[data-start-checkout]"),
+    checkoutBack: document.querySelector("[data-checkout-back]"),
+    checkoutTotal: document.querySelector("[data-checkout-total]"),
+    checkoutSubtotal: document.querySelector("[data-checkout-subtotal]"),
+    checkoutDiscount: document.querySelector("[data-checkout-discount]"),
+    checkoutDue: document.querySelector("[data-checkout-due]"),
+    payButtons: document.querySelectorAll("[data-pay-method]"),
+    confirmPayment: document.querySelector("[data-confirm-payment]"),
+    cashOverlay: document.querySelector("[data-cash-overlay]"),
+    cashClose: document.querySelector("[data-cash-close]"),
+    cashButtons: document.querySelector("[data-cash-buttons]"),
+    cashChange: document.querySelector("[data-cash-change]"),
+    completeSale: document.querySelector("[data-complete-sale]"),
+    cashAmountDisplay: document.querySelector("[data-cash-amount-display]"),
+    cashInputRow: document.querySelector("[data-cash-input-row]"),
+    cashInput: document.querySelector("[data-cash-input]"),
+    cashDue: document.querySelector("[data-cash-due]"),
+    cashChangeLabel: document.querySelector("[data-cash-change-label]"),
+    cashLine: document.querySelector("[data-cash-line]"),
+    saleComplete: document.querySelector("[data-sale-complete-screen]"),
+    completePaid: document.querySelector("[data-complete-paid]"),
+    completeChange: document.querySelector("[data-complete-change]"),
+    completeChangeDetail: document.querySelector("[data-complete-change-detail]"),
+    completeDiscount: document.querySelector("[data-complete-discount]"),
+    completeItems: document.querySelector("[data-complete-items]"),
+    completeMethod: document.querySelector("[data-complete-method]"),
+    completeTxn: document.querySelector("[data-complete-txn]"),
+    completeSaleTotal: document.querySelector("[data-complete-sale-total]"),
+    completeAmountReceived: document.querySelector("[data-complete-amount-received]"),
+    completeChangeDue: document.querySelector("[data-complete-change-due]"),
+    completeSubtotal: document.querySelector("[data-complete-subtotal]"),
+    completeMethodIcon: document.querySelector("[data-complete-method-icon]"),
+    completeTxnCopy: document.querySelector("[data-copy-txn]"),
+    completeTs: document.querySelector("[data-complete-ts]"),
+    completeCartOverlay: document.querySelector("[data-complete-cart-overlay]"),
+    completeCartList: document.querySelector("[data-complete-cart-list]"),
+    completeCartTotal: document.querySelector("[data-complete-cart-total]"),
+    completeCartClose: document.querySelector("[data-complete-cart-close]"),
+    completeCartCount: document.querySelector("[data-complete-cart-count]"),
+    completeCartSubtotal: document.querySelector("[data-complete-cart-subtotal]"),
+    completeCartDiscount: document.querySelector("[data-complete-cart-discount]"),
+    completeCartPaid: document.querySelector("[data-complete-cart-paid]"),
+    completeCartChange: document.querySelector("[data-complete-cart-change]"),
+    completeCartMethod: document.querySelector("[data-complete-cart-method]"),
+    newSale: document.querySelector("[data-new-sale]"),
+    printReceipt: document.querySelector("[data-print-receipt]"),
+    sendReceipt: document.querySelector("[data-send-receipt]"),
+    tenantSelect: document.querySelector("[data-tenant-select]"),
+  };
+
+  const applyRoleGuards = () => {
+    const toggle = (el) => {
+      if (!el) return;
+      el.disabled = salesLocked;
+      el.setAttribute("aria-disabled", salesLocked ? "true" : "false");
+      el.classList.toggle("is-disabled", salesLocked);
+    };
+    toggle(els.startCheckout);
+    toggle(els.confirmPayment);
+    toggle(els.completeSale);
+    toggle(els.cartViewBtn);
+    toggle(els.discountInc);
+    toggle(els.discountDec);
+    toggle(els.payButtons && els.payButtons[0]);
+    if (els.discountInput) {
+      els.discountInput.disabled = salesLocked;
+      els.discountInput.setAttribute("aria-disabled", salesLocked ? "true" : "false");
+    }
+    if (els.payButtons) {
+      els.payButtons.forEach((btn) => toggle(btn));
+    }
   };
 
   const getQty = (id) => state.cart.get(id) ?? 0;
   const setQty = (id, qty) => {
     if (qty <= 0) state.cart.delete(id);
     else state.cart.set(id, qty);
+  };
+  const getCartItems = () => {
+    return state.products
+      .map((p) => ({
+        ...p,
+        qty: getQty(p.id),
+      }))
+      .filter((p) => p.qty > 0);
   };
 
   const filtered = () => {
@@ -114,6 +212,13 @@
         </div>`;
       })
       .join("");
+    if (salesLocked) {
+      els.productGrid.querySelectorAll("[data-add]").forEach((btn) => {
+        btn.classList.add("is-disabled");
+        btn.setAttribute("aria-disabled", "true");
+        btn.disabled = true;
+      });
+    }
   };
 
   const renderCategories = () => {
@@ -130,6 +235,8 @@
     renderProducts();
     renderCartSummary();
     renderCartDrawer();
+    renderCheckout();
+    renderCash();
   };
 
   const renderCartSummary = () => {
@@ -138,7 +245,7 @@
     if (els.cartTotal) els.cartTotal.textContent = money(t.total);
     if (els.cartTotalDrawer) els.cartTotalDrawer.textContent = money(t.total);
     if (els.cartSubtotal) els.cartSubtotal.textContent = money(t.subtotal);
-    if (els.cartDiscount) els.cartDiscount.textContent = `−${money(t.discount)}`;
+    if (els.cartDiscount) els.cartDiscount.textContent = `- ${money(t.discount)}`;
     if (els.discountInput && document.activeElement !== els.discountInput) {
       els.discountInput.value = (t.discount / 100).toFixed(2);
     }
@@ -157,7 +264,7 @@
             <div class="price">${money(p.price_cents)}</div>
           </div>
           <div class="qty">
-            <button class="btn btn-ghost" data-dec="${p.id}">−</button>
+            <button class="btn btn-ghost" data-dec="${p.id}">-</button>
             <div class="num">${qty}</div>
             <button class="btn btn-primary" data-inc="${p.id}">+</button>
           </div>
@@ -165,6 +272,76 @@
       `);
     }
     els.cartList.innerHTML = lines.length ? lines.join("") : `<div class="pill">Cart is empty</div>`;
+    if (salesLocked) {
+      els.cartList.querySelectorAll("[data-inc],[data-dec]").forEach((btn) => {
+        btn.classList.add("is-disabled");
+        btn.setAttribute("aria-disabled", "true");
+        btn.disabled = true;
+      });
+    }
+  };
+
+  const renderCheckout = () => {
+    const t = totals();
+    if (els.checkoutTotal) els.checkoutTotal.textContent = money(t.total);
+    if (els.checkoutSubtotal) els.checkoutSubtotal.textContent = money(t.subtotal);
+    if (els.checkoutDiscount) els.checkoutDiscount.textContent = money(t.discount);
+    if (els.checkoutDue) els.checkoutDue.textContent = money(t.total);
+    updatePaymentButtons();
+  };
+
+  const setCashAmount = (cents) => {
+    state.cashAmount = Math.max(0, Math.round(cents));
+    renderCash();
+  };
+
+  const renderCash = () => {
+    const t = totals();
+    const change = state.cashAmount - t.total;
+    const changeLabel = els.cashChangeLabel;
+    const changeLine = els.cashLine;
+    if (changeLine) {
+      changeLine.classList.remove("warning", "success");
+    }
+    if (changeLabel) {
+      if (change < 0) {
+        changeLabel.textContent = "Remaining:";
+        changeLine?.classList.add("warning");
+      } else {
+        changeLabel.textContent = "Change:";
+        changeLine?.classList.add("success");
+      }
+    }
+    if (els.cashChange) els.cashChange.textContent = money(Math.abs(change));
+    if (els.cashAmountDisplay) els.cashAmountDisplay.textContent = money(state.cashAmount);
+    if (els.cashDue) els.cashDue.textContent = money(t.total);
+    if (els.cashInput && els.cashInputRow && !els.cashInputRow.classList.contains("is-hidden") && document.activeElement !== els.cashInput) {
+      els.cashInput.value = (state.cashAmount / 100).toFixed(2);
+    }
+    if (els.completeSale) {
+      const enabled = state.cashAmount >= t.total && t.total > 0;
+      els.completeSale.disabled = !enabled;
+      els.completeSale.setAttribute("aria-disabled", enabled ? "false" : "true");
+    }
+    if (els.cashButtons) {
+      els.cashButtons.querySelectorAll("[data-cash-amount]").forEach((btn) => {
+        const val = btn.getAttribute("data-cash-amount");
+        if (!val || val === "enter") return;
+        const cents = Number.parseInt(val, 10);
+        const strong = Number.isFinite(cents) && t.total > 0 && cents >= t.total;
+        btn.classList.toggle("cash-strong", strong);
+      });
+    }
+  };
+
+  const updatePaymentButtons = () => {
+    if (!els.payButtons) return;
+    els.payButtons.forEach((btn) => {
+      const method = btn.getAttribute("data-pay-method");
+      const active = method === state.paymentMethod;
+      btn.classList.toggle("active", active);
+      btn.setAttribute("aria-pressed", active ? "true" : "false");
+    });
   };
 
   const escapeHtml = (s) =>
@@ -213,6 +390,11 @@
     const incId = t.getAttribute("data-inc");
     const decId = t.getAttribute("data-dec");
 
+    if (salesLocked && (addId || incId || decId)) {
+      guardSales();
+      return;
+    }
+
     if (addId) {
       const id = Number(addId);
       setQty(id, getQty(id) + 1);
@@ -244,6 +426,17 @@
     if (!els.cartOverlay) return;
     els.cartOverlay.classList.remove("active");
   };
+  const showCheckout = () => {
+    closeCart();
+    if (els.posScreen) els.posScreen.classList.add("is-hidden");
+    if (els.checkoutScreen) els.checkoutScreen.classList.remove("is-hidden");
+    renderCheckout();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const exitCheckout = () => {
+    if (els.checkoutScreen) els.checkoutScreen.classList.add("is-hidden");
+    if (els.posScreen) els.posScreen.classList.remove("is-hidden");
+  };
   els.cartViewBtn?.addEventListener("click", () => {
     renderCartDrawer();
     openCart();
@@ -251,6 +444,42 @@
   els.cartCloseBtn?.addEventListener("click", closeCart);
   els.cartOverlay?.addEventListener("click", (e) => {
     if (e.target === els.cartOverlay) closeCart();
+  });
+  els.startCheckout?.addEventListener("click", () => {
+    if (guardSales()) return;
+    showCheckout();
+  });
+  els.checkoutBack?.addEventListener("click", exitCheckout);
+  const showCashInputRow = (show) => {
+    if (!els.cashInputRow) return;
+    els.cashInputRow.classList.toggle("is-hidden", !show);
+    if (show && els.cashInput) {
+      els.cashInput.value = (state.cashAmount / 100).toFixed(2);
+      els.cashInput.focus();
+      els.cashInput.select();
+    }
+  };
+  const showCashSheet = () => {
+    setCashAmount(0);
+    showCashInputRow(false);
+    if (els.cashOverlay) els.cashOverlay.classList.remove("is-hidden");
+    renderCash();
+  };
+  const closeCashSheet = () => {
+    if (els.cashOverlay) els.cashOverlay.classList.add("is-hidden");
+  };
+  els.confirmPayment?.addEventListener("click", () => {
+    if (guardSales()) return;
+    if (state.paymentMethod === "cash") {
+      showCashSheet();
+    } else {
+      // placeholder for QR flow
+      alert("QR Code payment coming soon.");
+    }
+  });
+  els.cashClose?.addEventListener("click", closeCashSheet);
+  els.cashOverlay?.addEventListener("click", (e) => {
+    if (e.target === els.cashOverlay) closeCashSheet();
   });
 
   const openMenu = () => {
@@ -302,6 +531,10 @@
       }
     };
     const start = (e) => {
+      if (salesLocked) {
+        guardSales();
+        return;
+      }
       e.preventDefault();
       adjustDiscount(delta); // immediate tick
       stop();
@@ -320,12 +553,180 @@
   makeHoldControl(els.discountDec, -100); // -₱1.00 (clamped at 0)
 
   els.discountInput?.addEventListener("input", (e) => {
+    if (salesLocked) {
+      guardSales();
+      e.target.value = "0.00";
+      return;
+    }
     const val = parseFloat(e.target.value);
     const cents = Number.isFinite(val) ? Math.round(val * 100) : 0;
     const t = totals();
     state.discount = Math.max(0, Math.min(t.subtotal, cents));
-    renderCartSummary();
+    renderAll();
   });
 
+  if (els.payButtons) {
+    els.payButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (guardSales()) return;
+        const method = btn.getAttribute("data-pay-method");
+        if (!method) return;
+        state.paymentMethod = method;
+        renderCheckout();
+      });
+    });
+  }
+
+  els.cashButtons?.addEventListener("click", (e) => {
+    const btn = e.target instanceof HTMLElement ? e.target.closest("[data-cash-amount]") : null;
+    if (!btn) return;
+    if (guardSales()) return;
+    const val = btn.getAttribute("data-cash-amount");
+    if (!val) return;
+    if (val === "enter") {
+      showCashInputRow(true);
+      // Do not prefill; wait for user input.
+      return;
+    }
+    showCashInputRow(false);
+    const cents = Number.parseInt(val, 10);
+    if (Number.isFinite(cents)) setCashAmount(cents);
+  });
+
+  els.completeSale?.addEventListener("click", () => {
+    if (guardSales()) return;
+    const t = totals();
+    const paid = state.cashAmount;
+    const change = Math.max(0, paid - t.total);
+    const method = state.paymentMethod === "cash" ? "Cash" : "QR Code";
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mm = String(now.getMinutes()).padStart(2, "0");
+    const fullTxn = `${"PHGA"}${"PH"}${y}${m}${d}${hh}${mm}`;
+    const shortTxn = `${fullTxn.slice(0, 6)}...${fullTxn.slice(-4)}`;
+    const ts = now.toLocaleString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+
+    if (els.completePaid) els.completePaid.textContent = money(paid);
+    if (els.completeChange) els.completeChange.textContent = `Change Due ${money(change)}`;
+    if (els.completeChangeDetail) els.completeChangeDetail.textContent = money(change);
+    if (els.completeDiscount) els.completeDiscount.textContent = money(state.discount);
+    if (els.completeItems) {
+      const count = Array.from(state.cart.values()).reduce((a, b) => a + b, 0);
+      els.completeItems.textContent = `${count}`;
+    }
+    if (els.completeMethod) els.completeMethod.textContent = method;
+    if (els.completeMethodIcon) els.completeMethodIcon.textContent = method === "Cash" ? "💵" : "🔲";
+    if (els.completeTxn) {
+      els.completeTxn.textContent = shortTxn;
+      els.completeTxn.dataset.fullTxn = fullTxn;
+    }
+    if (els.completeSaleTotal) els.completeSaleTotal.textContent = money(t.total);
+    if (els.completeAmountReceived) els.completeAmountReceived.textContent = money(paid);
+    if (els.completeChangeDue) els.completeChangeDue.textContent = money(change);
+    if (els.completeSubtotal) els.completeSubtotal.textContent = money(t.subtotal);
+    if (els.completeTs) els.completeTs.textContent = ts;
+    if (els.completeCartList && els.completeCartTotal && els.completeCartCount) {
+      const items = getCartItems();
+      const rows = items.map((p) => {
+        const line = p.qty * p.price_cents;
+        return `
+          <div class="complete-cart-row">
+            <div class="complete-cart-info">
+              <div class="complete-cart-name">${escapeHtml(p.name)}</div>
+              <div class="complete-cart-meta">
+                <span>Qty: ${p.qty}</span>
+                <span>${money(p.price_cents)} each</span>
+              </div>
+            </div>
+            <div class="complete-cart-total">${money(line)}</div>
+          </div>
+        `;
+      });
+      els.completeCartList.innerHTML = rows.join("") || `<div class="pill">No items</div>`;
+      els.completeCartTotal.textContent = money(t.total);
+      const cartSubtotal = items.reduce((sum, p) => sum + p.qty * p.price_cents, 0);
+      const cartDiscount = Math.max(0, cartSubtotal - t.total);
+      if (els.completeCartSubtotal) els.completeCartSubtotal.textContent = money(cartSubtotal);
+      if (els.completeCartDiscount) els.completeCartDiscount.textContent = money(cartDiscount);
+      if (els.completeCartPaid) els.completeCartPaid.textContent = money(paid);
+      if (els.completeCartChange) els.completeCartChange.textContent = money(change);
+      if (els.completeCartMethod) els.completeCartMethod.textContent = method;
+      const count = items.reduce((a, b) => a + b.qty, 0);
+      els.completeCartCount.textContent = `${count} item${count === 1 ? "" : "s"}`;
+    }
+    closeCashSheet();
+    if (els.checkoutScreen) els.checkoutScreen.classList.add("is-hidden");
+    if (els.posScreen) els.posScreen.classList.add("is-hidden");
+    if (els.saleComplete) els.saleComplete.classList.remove("is-hidden");
+  });
+
+  els.cashInput?.addEventListener("input", (e) => {
+    if (salesLocked) {
+      guardSales();
+      e.target.value = "";
+      return;
+    }
+    const val = parseFloat(e.target.value);
+    const cents = Number.isFinite(val) ? Math.round(val * 100) : 0;
+    setCashAmount(cents);
+  });
+
+  els.newSale?.addEventListener("click", () => {
+    state.cart.clear();
+    state.discount = 0;
+    state.cashAmount = 0;
+    renderAll();
+    if (els.saleComplete) els.saleComplete.classList.add("is-hidden");
+    if (els.checkoutScreen) els.checkoutScreen.classList.add("is-hidden");
+    if (els.posScreen) els.posScreen.classList.remove("is-hidden");
+  });
+
+  els.printReceipt?.addEventListener("click", () => {
+    alert("Printing receipt...");
+  });
+  els.sendReceipt?.addEventListener("click", () => {
+    alert("Sending receipt...");
+  });
+  els.completeTxnCopy?.addEventListener("click", async () => {
+    const full = els.completeTxn?.dataset.fullTxn || els.completeTxn?.textContent || "";
+    if (!full) return;
+    try {
+      await navigator.clipboard.writeText(full);
+      alert("Transaction ID copied.");
+    } catch {
+      alert("Copy not available in this browser.");
+    }
+  });
+
+  const openCompleteCart = () => {
+    if (els.completeCartOverlay) els.completeCartOverlay.classList.remove("is-hidden");
+  };
+  const closeCompleteCart = () => {
+    if (els.completeCartOverlay) els.completeCartOverlay.classList.add("is-hidden");
+  };
+  document.querySelector("[data-view-details]")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    openCompleteCart();
+  });
+  els.completeCartClose?.addEventListener("click", closeCompleteCart);
+  els.completeCartOverlay?.addEventListener("click", (e) => {
+    if (e.target === els.completeCartOverlay) closeCompleteCart();
+  });
+
+  els.tenantSelect?.addEventListener("change", () => {
+    const form = els.tenantSelect.closest("form");
+    if (form) form.submit();
+  });
+
+  applyRoleGuards();
   loadData();
 })();

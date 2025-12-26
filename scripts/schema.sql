@@ -24,7 +24,7 @@ begin
     set name = excluded.name,
         active = excluded.active;
 end
-$$;
+
 
 create table if not exists users (
   id bigserial primary key,
@@ -151,11 +151,15 @@ create table if not exists products (
   name text not null,
   category_id bigint null references categories(id) on delete set null,
   price_cents integer not null check (price_cents >= 0),
+  cost_cents integer not null default 0 check (cost_cents >= 0),
+  qty_on_hand integer not null default 0 check (qty_on_hand >= 0),
   active boolean not null default true,
   created_at timestamptz not null default now()
 );
 
 alter table products add column if not exists tenant_id bigint references tenants(id) on delete set null;
+alter table products add column if not exists qty_on_hand integer not null default 0;
+alter table products add column if not exists cost_cents integer not null default 0;
 
 do $$
 begin
@@ -181,6 +185,29 @@ create index if not exists products_active_idx on products(active);
 create index if not exists products_name_idx on products(lower(name));
 create index if not exists products_tenant_idx on products(tenant_id);
 
+-- Inventory movements (ledger)
+create table if not exists inventory_movements (
+  id bigserial primary key,
+  product_id bigint not null references products(id) on delete cascade,
+  tenant_id bigint null references tenants(id) on delete set null,
+  change_qty integer not null,
+  reason text not null,
+  ref_type text null,
+  ref_id bigint null,
+  created_by bigint null references users(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+
+alter table inventory_movements add column if not exists tenant_id bigint references tenants(id) on delete set null;
+alter table inventory_movements add column if not exists ref_type text;
+alter table inventory_movements add column if not exists ref_id bigint;
+alter table inventory_movements add column if not exists created_by bigint references users(id) on delete set null;
+
+create index if not exists inventory_movements_product_idx on inventory_movements(product_id);
+create index if not exists inventory_movements_tenant_idx on inventory_movements(tenant_id);
+create index if not exists inventory_movements_ref_idx on inventory_movements(ref_type, ref_id);
+create index if not exists inventory_movements_created_idx on inventory_movements(created_at desc);
+
 -- ----------------------------------------------------------------------------
 -- Orders + payments
 -- ----------------------------------------------------------------------------
@@ -191,16 +218,73 @@ create table if not exists orders (
   subtotal_cents integer not null default 0 check (subtotal_cents >= 0),
   tax_cents integer not null default 0 check (tax_cents >= 0),
   total_cents integer not null default 0 check (total_cents >= 0),
+  discount_cents integer not null default 0 check (discount_cents >= 0),
+  change_cents integer not null default 0 check (change_cents >= 0),
+  amount_received_cents integer not null default 0 check (amount_received_cents >= 0),
+  payment_method text not null default 'cash',
+  receipt_no text not null default '',
+  transaction_id text not null default '',
+  cashier_name text null,
+  cashier_username text null,
   created_by bigint null references users(id) on delete set null,
   created_at timestamptz not null default now(),
   paid_at timestamptz null
 );
 
 alter table orders add column if not exists tenant_id bigint references tenants(id) on delete set null;
+alter table orders add column if not exists discount_cents integer not null default 0 check (discount_cents >= 0);
+alter table orders add column if not exists change_cents integer not null default 0 check (change_cents >= 0);
+alter table orders add column if not exists amount_received_cents integer not null default 0 check (amount_received_cents >= 0);
+alter table orders add column if not exists payment_method text not null default 'cash';
+alter table orders add column if not exists receipt_no text;
+alter table orders add column if not exists transaction_id text;
+alter table orders add column if not exists cashier_name text;
+alter table orders add column if not exists cashier_username text;
+
+update orders
+set receipt_no = coalesce(receipt_no, concat('RCPT-', id)),
+    transaction_id = coalesce(transaction_id, concat('TXN-', id))
+where receipt_no is null
+   or transaction_id is null;
+
+do $$
+begin
+  begin
+    alter table orders alter column receipt_no set not null;
+    alter table orders alter column receipt_no set default '';
+  exception when others then
+    null;
+  end;
+  begin
+    alter table orders alter column transaction_id set not null;
+    alter table orders alter column transaction_id set default '';
+  exception when others then
+    null;
+  end;
+end
+$$;
 
 create index if not exists orders_status_idx on orders(status);
 create index if not exists orders_created_at_idx on orders(created_at desc);
 create index if not exists orders_tenant_idx on orders(tenant_id);
+create unique index if not exists orders_transaction_id_idx on orders(transaction_id);
+create index if not exists orders_receipt_no_idx on orders(receipt_no);
+create unique index if not exists orders_receipt_no_tenant_idx on orders(tenant_id, receipt_no);
+create index if not exists orders_cashier_name_idx on orders(lower(cashier_name));
+create index if not exists orders_cashier_username_idx on orders(lower(cashier_username));
+
+do $$
+begin
+  if exists (select 1 from pg_constraint where conname in ('orders_payment_method_check', 'orders_payment_method_chk')) then
+    alter table orders drop constraint if exists orders_payment_method_check;
+    alter table orders drop constraint if exists orders_payment_method_chk;
+  end if;
+exception when others then
+  null;
+end
+$$;
+
+alter table orders add constraint orders_payment_method_chk check (payment_method in ('cash','qr','card','transfer','mobile_money'));
 
 create table if not exists order_items (
   id bigserial primary key,
@@ -223,6 +307,19 @@ create table if not exists payments (
   amount_cents integer not null check (amount_cents >= 0),
   created_at timestamptz not null default now()
 );
+
+do $$
+begin
+  if exists (select 1 from pg_constraint where conname in ('payments_method_check', 'payments_method_chk')) then
+    alter table payments drop constraint if exists payments_method_check;
+    alter table payments drop constraint if exists payments_method_chk;
+  end if;
+exception when others then
+  null;
+end
+$$;
+
+alter table payments add constraint payments_method_chk check (method in ('cash','card','transfer','mobile_money','qr'));
 
 create index if not exists payments_order_id_idx on payments(order_id);
 

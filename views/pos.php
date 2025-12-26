@@ -12,23 +12,24 @@ $isManager = $roleLower === 'manager';
 $isReadonly = $roleLower === 'readonly';
 $tenantId = isset($tenant_id) && is_numeric($tenant_id) ? (int) $tenant_id : null;
 $tenantName = is_string($tenant_name ?? null) ? $tenant_name : 'Tenant';
+$tenantAddress = is_string($tenant_address ?? null) ? $tenant_address : '';
+$tenantContact = is_string($tenant_contact ?? null) ? $tenant_contact : '';
 $tenantOptions = is_array($tenants ?? null) ? $tenants : [];
 $csrf = Csrf::token();
+$cashierFull = is_string($user['full_name'] ?? null) ? $user['full_name'] : '';
+$usernameDisplay = is_string($user['username'] ?? null) ? $user['username'] : 'phga_manager';
+$avatarInitials = strtoupper(substr($usernameDisplay, 0, 2));
+$roleLabel = ucfirst($roleLower ?: 'Role');
 ?>
 <div class="screen" data-pos-screen data-role="<?= e($roleLower) ?>" data-tenant="<?= e((string) $tenantId) ?>">
   <header class="topbar">
     <div class="topbar-row topbar-head">
       <div class="menu-wrap">
-        <button class="icon-btn" type="button" aria-label="Open menu" data-menu-open>&#9776;</button>
-        <div class="menu-dropdown" data-menu-dropdown>
-          <?php if ($isAdmin): ?>
-            <a href="/tenant-config">Tenant Configuration</a>
-          <?php elseif ($isManager): ?>
-            <a href="/manage-users">Manage Users</a>
-          <?php endif; ?>
-          <a href="/login">Switch user</a>
-          <a href="/logout">Logout</a>
-        </div>
+        <button class="icon-btn burger-btn" type="button" aria-label="Open menu" data-menu-open>
+          <span class="burger-lines" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </span>
+        </button>
       </div>
       <div class="brand-text">
         <div class="brand-name"><?= e($title ?? 'Plughub POS Mobile') ?></div>
@@ -68,6 +69,125 @@ $csrf = Csrf::token();
       <?php endif; ?>
     </div>
   </header>
+
+  <div class="nav-drawer-shell" data-menu-shell>
+    <div class="nav-drawer-overlay" data-menu-overlay></div>
+    <aside class="nav-drawer" data-menu-drawer role="dialog" aria-modal="true" aria-label="Plughub POS menu" aria-hidden="true">
+      <div class="nav-drawer-header">
+        <div class="nav-app">
+          <div class="nav-app-name">Plughub POS Mobile</div>
+          <div class="nav-app-sub">One-hand friendly shortcuts</div>
+        </div>
+        <button class="nav-close" type="button" data-menu-close aria-label="Close menu">&#10005;</button>
+      </div>
+      <div class="nav-user-chip">
+        <div class="nav-avatar" aria-hidden="true"><?= e($avatarInitials) ?></div>
+        <div>
+          <div class="nav-username"><?= e($usernameDisplay) ?></div>
+          <div class="nav-role"><?= e($roleLabel) ?></div>
+        </div>
+      </div>
+      <div class="nav-divider"></div>
+      <nav class="nav-groups" aria-label="Primary">
+        <div class="nav-group">
+          <div class="nav-label">Core operations</div>
+          <a class="nav-item" href="/inventory" data-menu-item data-route="/inventory">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" role="presentation">
+                <path d="M4 8.5L12 4l8 4.5v7L12 20l-8-4.5v-7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                <path d="M4 8.5l8 4.5 8-4.5M12 13v7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="nav-text">Inventory</span>
+          </a>
+          <?php if ($isManager || $isAdmin): ?>
+            <a class="nav-item" href="/reports" data-menu-item data-route="/reports">
+              <span class="nav-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="presentation">
+                  <path d="M5 14.5 10 10l3 2 6-5v10H5v-2.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M5 19h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+              </span>
+              <span class="nav-text">Reports</span>
+            </a>
+          <?php endif; ?>
+          <a class="nav-item" href="/sales-history" data-menu-item data-route="/sales-history">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" role="presentation">
+                <path d="M7 4h10v16l-2-1-2 1-2-1-2 1-2-1-2 1V4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                <path d="M9 8h6M9 11h6M9 14h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <span class="nav-text">Sales History</span>
+          </a>
+        </div>
+        <?php if ($isManager || $isAdmin): ?>
+          <div class="nav-divider"></div>
+          <div class="nav-group">
+            <div class="nav-label">Management</div>
+            <?php if ($isAdmin): ?>
+              <a class="nav-item is-muted" href="/tenant-config" data-menu-item data-route="/tenant-config">
+                <span class="nav-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" role="presentation">
+                    <path d="M5 9h14M5 15h14M9 5v14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+                <span class="nav-text">Tenant Configuration</span>
+              </a>
+            <?php endif; ?>
+            <a class="nav-item is-muted" href="/manage-users" data-menu-item data-route="/manage-users">
+              <span class="nav-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="presentation">
+                  <path d="M8.5 12a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM17 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  <path d="M4 19.5c0-2.2 2.4-3.5 4.5-3.5s4.5 1.3 4.5 3.5M14.5 18.5c.5-.9 1.7-1.5 3-1.5 1.3 0 2.5.6 3 1.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <span class="nav-text">Manage Users</span>
+            </a>
+            <a class="nav-item is-muted" href="/login" data-menu-item data-route="/login">
+              <span class="nav-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="presentation">
+                  <path d="M10 6h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M5 12h10M8 9l-3 3 3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <span class="nav-text">Switch User</span>
+            </a>
+          </div>
+        <?php endif; ?>
+        <div class="nav-divider"></div>
+        <div class="nav-group">
+          <div class="nav-label">Account &amp; system</div>
+          <a class="nav-item is-danger" href="/logout" data-menu-item data-logout-link>
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" role="presentation">
+                <path d="M13 5h-3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                <path d="M15 12H4M12 9l3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="nav-text">Logout</span>
+            <span class="nav-caret" aria-hidden="true">&gt;</span>
+          </a>
+        </div>
+      </nav>
+    </aside>
+  </div>
+
+  <div class="confirm-overlay" data-logout-dialog aria-hidden="true">
+    <div class="confirm-card" role="alertdialog" aria-modal="true" aria-labelledby="logout-title" aria-describedby="logout-copy">
+      <div class="confirm-header">
+        <div class="confirm-icon" aria-hidden="true">!</div>
+        <div>
+          <div class="confirm-title" id="logout-title">Logout?</div>
+          <div class="confirm-copy" id="logout-copy">Are you sure you want to log out?</div>
+        </div>
+      </div>
+      <div class="confirm-actions">
+        <button class="btn btn-ghost" type="button" data-logout-cancel>Cancel</button>
+        <a class="btn btn-danger" href="/logout" data-logout-confirm>Logout</a>
+      </div>
+    </div>
+  </div>
 
   <main class="content">
     <?php if ($flash): ?>
@@ -395,6 +515,10 @@ $ctx = [
     'is_readonly' => $isReadonly,
     'tenant_id' => $tenantId,
     'tenant_name' => $tenantName,
+    'tenant_address' => $tenantAddress,
+    'tenant_contact' => $tenantContact,
+    'cashier_name' => $user ? (string) ($user['username'] ?? '') : 'Cashier',
+    'cashier_full_name' => $cashierFull,
 ];
 $contextJson = json_encode($ctx, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
 $content = ob_get_clean() . PHP_EOL . '<script>window.__APP_CTX__ = ' . $contextJson . ';</script>';

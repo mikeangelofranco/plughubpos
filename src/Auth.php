@@ -23,6 +23,8 @@ final class Auth
             'role' => (string) ($u['role'] ?? 'Cashier'),
             'tenant_id' => isset($u['tenant_id']) ? (int) $u['tenant_id'] : null,
             'tenant_name' => is_string($u['tenant_name'] ?? null) ? $u['tenant_name'] : null,
+            'full_name' => is_string($u['full_name'] ?? null) ? $u['full_name'] : null,
+            'contact_number' => is_string($u['contact_number'] ?? null) ? $u['contact_number'] : null,
         ];
     }
 
@@ -80,8 +82,9 @@ final class Auth
         }
 
         $pdo = Db::pdo();
-        $stmt = $pdo->prepare('
+            $stmt = $pdo->prepare('
             select u.id, u.username, u.password_hash, u.role, u.active, u.tenant_id,
+                   u.full_name, u.contact_number,
                    t.name as tenant_name, t.active as tenant_active
             from users u
             left join tenants t on t.id = u.tenant_id
@@ -115,6 +118,8 @@ final class Auth
             'role' => $role !== '' ? $role : 'Cashier',
             'tenant_id' => isset($row['tenant_id']) ? (int) $row['tenant_id'] : null,
             'tenant_name' => is_string($row['tenant_name'] ?? null) ? $row['tenant_name'] : null,
+            'full_name' => is_string($row['full_name'] ?? null) ? $row['full_name'] : null,
+            'contact_number' => is_string($row['contact_number'] ?? null) ? $row['contact_number'] : null,
         ];
         $_SESSION['active_tenant_id'] = strcasecmp($role, 'Admin') === 0 ? null : (isset($row['tenant_id']) ? (int) $row['tenant_id'] : null);
         return true;

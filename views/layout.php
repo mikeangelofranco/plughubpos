@@ -12,6 +12,7 @@ declare(strict_types=1);
     <link rel="stylesheet" href="/assets/css/app.css" />
   </head>
   <body>
+    <div class="demo-watermark">DEMO VERSION</div>
     <div class="app">
       <div class="shell">
         <?= $content ?? '' ?>

@@ -43,28 +43,8 @@ foreach ($users as $u) {
   <?php endif; ?>
 
   <section class="panel">
-    <h2>Create Tenant</h2>
-    <form method="post" class="form">
-      <input type="hidden" name="_csrf" value="<?= e($csrf) ?>" />
-      <input type="hidden" name="action" value="add_tenant" />
-      <label class="label">
-        <span>Tenant name</span>
-        <input class="input" name="name" placeholder="e.g., Lagos Storefront" required />
-      </label>
-      <label class="label">
-        <span>Slug (optional)</span>
-        <input class="input" name="slug" placeholder="auto-generated if empty" />
-      </label>
-      <label class="label">
-        <span>Address</span>
-        <input class="input" name="address" placeholder="Street, City" />
-      </label>
-      <label class="label">
-        <span>Contact number</span>
-        <input class="input" name="contact_number" placeholder="+234..." />
-      </label>
-      <button class="btn btn-primary" type="submit">Create Tenant</button>
-    </form>
+    <h2>Tenant Creation Disabled</h2>
+    <div class="notice notice-warn">Creating new tenants is disabled for this demo. Please use an existing tenant.</div>
   </section>
 
   <section class="panel">

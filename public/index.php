@@ -292,38 +292,13 @@ switch ($path) {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $csrf = $_POST['_csrf'] ?? null;
             if (!Csrf::validate(is_string($csrf) ? $csrf : null)) {
-                $flashError = 'Invalid session. Please try again.';
-            } else {
-                $action = (string) ($_POST['action'] ?? '');
-                if ($action === 'add_tenant') {
-                    $name = trim((string) ($_POST['name'] ?? ''));
-                    $slugInput = trim((string) ($_POST['slug'] ?? ''));
-                    $address = trim((string) ($_POST['address'] ?? ''));
-                    $contact = trim((string) ($_POST['contact_number'] ?? ''));
-                    if ($name === '') {
-                        $flashError = 'Tenant name is required.';
-                    } else {
-                        $slug = strtolower($slugInput !== '' ? $slugInput : $name);
-                        $slug = preg_replace('/[^a-z0-9-]+/', '-', $slug) ?? $slug;
-                        $slug = trim($slug, '-');
-                        if ($slug === '') {
-                            $slug = 'tenant-' . bin2hex(random_bytes(3));
-                        }
-                        try {
-                            $stmt = $pdo->prepare('insert into tenants (name, slug, address, contact_number, active) values (:n, :s, :a, :c, true)');
-                            $stmt->execute([
-                                ':n' => $name,
-                                ':s' => $slug,
-                                ':a' => $address !== '' ? $address : null,
-                                ':c' => $contact !== '' ? $contact : null,
-                            ]);
-                            Session::flash('success', 'Tenant created.');
-                            redirect('/tenant-config');
-                        } catch (Throwable $e) {
-                            $flashError = env('APP_DEBUG', false) ? $e->getMessage() : 'Could not create tenant (name/slug may already exist).';
-                        }
-                    }
-                } elseif ($action === 'update_tenant') {
+                  $flashError = 'Invalid session. Please try again.';
+              } else {
+                  $action = (string) ($_POST['action'] ?? '');
+                  if ($action === 'add_tenant') {
+                      Session::flash('error', 'Tenant creation is disabled in this demo.');
+                      redirect('/tenant-config');
+                  } elseif ($action === 'update_tenant') {
                     $id = (int) ($_POST['id'] ?? 0);
                     $name = trim((string) ($_POST['name'] ?? ''));
                     $slugInput = trim((string) ($_POST['slug'] ?? ''));

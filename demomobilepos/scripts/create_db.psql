@@ -1,0 +1,23 @@
+-- Run with a superuser if role/db do not exist:
+--   psql -U postgres -f scripts/create_db.psql
+
+\set ON_ERROR_STOP on
+
+do $$
+begin
+  if not exists (select 1 from pg_roles where rolname = 'plughub') then
+    create role plughub login password 'Cablet0w';
+  end if;
+end
+$$;
+
+select format('create database %I owner %I', 'plughub_possystem', 'plughub')
+where not exists (select 1 from pg_database where datname = 'plughub_possystem')
+\gexec
+
+\connect plughub_possystem
+
+\echo 'Applying schema as role plughub...'
+set role plughub;
+\i scripts/schema.sql
+reset role;

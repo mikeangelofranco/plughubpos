@@ -36,6 +36,9 @@ $ensureInventorySchema = static function (PDO $pdo): void {
     $ddl = [
         "alter table products add column if not exists qty_on_hand integer not null default 0",
         "alter table products add column if not exists cost_cents integer not null default 0",
+        "alter table products add column if not exists updated_at timestamptz not null default now()",
+        "alter table products add column if not exists price_updated_at timestamptz null",
+        "alter table products add column if not exists price_updated_by bigint references users(id) on delete set null",
         "create table if not exists inventory_movements (
             id bigserial primary key,
             product_id bigint not null references products(id) on delete cascade,
@@ -55,7 +58,21 @@ $ensureInventorySchema = static function (PDO $pdo): void {
         "create index if not exists inventory_movements_product_idx on inventory_movements(product_id)",
         "create index if not exists inventory_movements_tenant_idx on inventory_movements(tenant_id)",
         "create index if not exists inventory_movements_ref_idx on inventory_movements(ref_type, ref_id)",
-        "create index if not exists inventory_movements_created_idx on inventory_movements(created_at desc)"
+        "create index if not exists inventory_movements_created_idx on inventory_movements(created_at desc)",
+        "create table if not exists price_change_audit (
+            id bigserial primary key,
+            product_id bigint not null references products(id) on delete cascade,
+            tenant_id bigint null references tenants(id) on delete set null,
+            old_price_cents integer not null check (old_price_cents >= 0),
+            new_price_cents integer not null check (new_price_cents >= 0),
+            changed_by bigint null references users(id) on delete set null,
+            reason text null,
+            device_id text null,
+            created_at timestamptz not null default now()
+        )",
+        "create index if not exists price_change_audit_product_idx on price_change_audit(product_id)",
+        "create index if not exists price_change_audit_tenant_idx on price_change_audit(tenant_id)",
+        "create index if not exists price_change_audit_created_idx on price_change_audit(created_at desc)"
     ];
     foreach ($ddl as $sql) {
         try {
@@ -176,6 +193,150 @@ if ($path !== '/') {
     if ($path === '') {
         $path = '/';
     }
+}
+
+$priceChangeMatch = [];
+if (preg_match('#^/api/products/(\\d+)/price$#', $path, $priceChangeMatch)) {
+    if (!Auth::check()) {
+        $apiJson(['ok' => false, 'error' => 'Unauthorized'], 401);
+        exit;
+    }
+    $role = strtolower((string) Auth::role());
+    if (!in_array($role, ['admin', 'manager'], true)) {
+        $apiJson(['ok' => false, 'error' => 'Forbidden'], 403);
+        exit;
+    }
+    $method = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? ''));
+    if ($method !== 'PATCH') {
+        $apiJson(['ok' => false, 'error' => 'Method not allowed'], 405);
+        exit;
+    }
+    $tenantId = Auth::tenantId();
+    if ($tenantId === null) {
+        $apiJson(['ok' => false, 'error' => 'Select a tenant before changing prices.'], 400);
+        exit;
+    }
+    $productId = isset($priceChangeMatch[1]) ? (int) $priceChangeMatch[1] : 0;
+    if ($productId <= 0) {
+        $apiJson(['ok' => false, 'error' => 'Product is required.'], 400);
+        exit;
+    }
+    $raw = (string) file_get_contents('php://input');
+    $payload = json_decode($raw, true);
+    $newPriceRaw = $payload['new_price'] ?? null;
+    $newPrice = is_numeric($newPriceRaw) ? (float) $newPriceRaw : null;
+    if ($newPrice === null || $newPrice < 0) {
+        $apiJson(['ok' => false, 'error' => 'Enter a valid price.'], 400);
+        exit;
+    }
+    $newPriceCents = (int) round($newPrice * 100);
+    if ($newPriceCents < 1) {
+        $apiJson(['ok' => false, 'error' => 'Price must be at least 0.01.'], 400);
+        exit;
+    }
+    $reason = trim((string) ($payload['reason'] ?? ''));
+    $deviceIdRaw = trim((string) ($payload['device_id'] ?? ''));
+    $deviceId = $deviceIdRaw !== '' ? substr($deviceIdRaw, 0, 120) : null;
+    $pdo = null;
+    try {
+        $pdo = Db::pdo();
+        $ensureInventorySchema($pdo);
+        $pdo->beginTransaction();
+        $stmt = $pdo->prepare('
+            select p.id, p.tenant_id, p.name, p.sku, p.price_cents, p.cost_cents, p.category_id,
+                   coalesce(m.qty, p.qty_on_hand) as qty_on_hand
+            from products p
+            left join (
+                select product_id, sum(change_qty) as qty
+                from inventory_movements
+                group by product_id
+            ) m on m.product_id = p.id
+            where p.id = :id and (p.tenant_id = :tid or p.tenant_id is null)
+            limit 1
+        ');
+        $stmt->execute([':id' => $productId, ':tid' => $tenantId]);
+        $product = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$product) {
+            $pdo->rollBack();
+            $apiJson(['ok' => false, 'error' => 'Product not found for this tenant.'], 404);
+            exit;
+        }
+        $currentPrice = (int) ($product['price_cents'] ?? 0);
+        if ($newPriceCents === $currentPrice) {
+            $pdo->rollBack();
+            $apiJson(['ok' => false, 'error' => 'No changes to save.'], 400);
+            exit;
+        }
+        $user = Auth::user();
+        $userId = isset($user['id']) ? (int) $user['id'] : null;
+        $stmtUpdate = $pdo->prepare('
+            update products
+            set price_cents = :price,
+                updated_at = now(),
+                price_updated_at = now(),
+                price_updated_by = :uid
+            where id = :id
+        ');
+        $stmtUpdate->execute([
+            ':price' => $newPriceCents,
+            ':uid' => $userId,
+            ':id' => $productId,
+        ]);
+        $stmtAudit = $pdo->prepare('
+            insert into price_change_audit (product_id, tenant_id, old_price_cents, new_price_cents, changed_by, reason, device_id)
+            values (:pid, :tid, :oldp, :newp, :uid, :reason, :device)
+            returning id
+        ');
+        $stmtAudit->execute([
+            ':pid' => $productId,
+            ':tid' => $tenantId,
+            ':oldp' => $currentPrice,
+            ':newp' => $newPriceCents,
+            ':uid' => $userId,
+            ':reason' => $reason !== '' ? $reason : null,
+            ':device' => $deviceId,
+        ]);
+        $auditId = (int) ($stmtAudit->fetchColumn() ?: 0);
+        $stmtFetch = $pdo->prepare('
+            select p.id, p.sku, p.name, p.price_cents, p.cost_cents, p.category_id, p.tenant_id,
+                   coalesce(m.qty, p.qty_on_hand) as qty_on_hand,
+                   p.price_updated_at, p.price_updated_by, p.updated_at
+            from products p
+            left join (
+                select product_id, sum(change_qty) as qty
+                from inventory_movements
+                group by product_id
+            ) m on m.product_id = p.id
+            where p.id = :id
+            limit 1
+        ');
+        $stmtFetch->execute([':id' => $productId]);
+        $updated = $stmtFetch->fetch(PDO::FETCH_ASSOC) ?: [
+            'id' => $productId,
+            'sku' => $product['sku'] ?? '',
+            'name' => $product['name'] ?? '',
+            'price_cents' => $newPriceCents,
+            'cost_cents' => $product['cost_cents'] ?? 0,
+            'category_id' => $product['category_id'] ?? null,
+            'tenant_id' => $product['tenant_id'] ?? null,
+            'qty_on_hand' => $product['qty_on_hand'] ?? 0,
+            'price_updated_at' => date('c'),
+            'price_updated_by' => $userId,
+            'updated_at' => date('c'),
+        ];
+        $pdo->commit();
+        $apiJson([
+            'ok' => true,
+            'product' => $updated,
+            'audit_id' => $auditId,
+        ]);
+    } catch (Throwable $e) {
+        if ($pdo instanceof PDO && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        $apiJson(['ok' => false, 'error' => env('APP_DEBUG', false) ? $e->getMessage() : 'Could not update price'], 500);
+    }
+    exit;
 }
 
 switch ($path) {
@@ -843,7 +1004,8 @@ switch ($path) {
                 $prodSql = '
                     select p.id, p.sku, p.name, p.price_cents, p.cost_cents, p.category_id, p.tenant_id,
                            coalesce(m.qty, p.qty_on_hand) as qty_on_hand,
-                           c.name as category_name
+                           c.name as category_name,
+                           p.updated_at, p.price_updated_at, p.price_updated_by
                     from products p
                     left join (
                         select product_id, sum(change_qty) as qty
@@ -864,7 +1026,8 @@ switch ($path) {
             } catch (Throwable $e) {
                 $prodSql = '
                     select p.id, p.sku, p.name, p.price_cents, p.category_id, p.tenant_id, p.qty_on_hand,
-                           c.name as category_name
+                           c.name as category_name,
+                           p.updated_at, p.price_updated_at, p.price_updated_by
                     from products p
                     left join categories c on c.id = p.category_id
                     where p.active = true
@@ -888,6 +1051,7 @@ switch ($path) {
             'title' => 'Products',
             'tenant_name' => $tenantName,
             'tenant_id' => $tenantId,
+            'role' => Auth::role(),
             'categories' => $categories,
             'products' => $products,
             'flash' => Session::flash('success'),
@@ -1132,7 +1296,7 @@ switch ($path) {
             ]);
             $movementId = (int) ($stmtMove->fetchColumn() ?: 0);
 
-            $stmtUpdate = $pdo->prepare('update products set qty_on_hand = :qty where id = :id');
+            $stmtUpdate = $pdo->prepare('update products set qty_on_hand = :qty, updated_at = now() where id = :id');
             $stmtUpdate->execute([':qty' => $newStock, ':id' => $productId]);
 
             $pdo->commit();
@@ -1235,7 +1399,8 @@ switch ($path) {
             try {
                 $sql = '
                     select p.id, p.sku, p.name, p.price_cents, p.cost_cents, p.category_id, p.tenant_id,
-                           coalesce(m.qty, p.qty_on_hand) as qty_on_hand
+                           coalesce(m.qty, p.qty_on_hand) as qty_on_hand,
+                           p.updated_at, p.price_updated_at, p.price_updated_by
                     from products p
                     left join (
                         select product_id, sum(change_qty) as qty
@@ -1256,7 +1421,8 @@ switch ($path) {
                 // fallback if inventory tables/columns not present
                 $params = [];
                 $sql = '
-                    select id, sku, name, price_cents, category_id, tenant_id, qty_on_hand
+                    select id, sku, name, price_cents, category_id, tenant_id, qty_on_hand,
+                           updated_at, price_updated_at, price_updated_by
                     from products
                     where active = true
                 ';
@@ -1530,7 +1696,7 @@ switch ($path) {
                     where p.id = :pid and (p.tenant_id = :tid or p.tenant_id is null)
                     limit 1
                 ');
-                $stmtUpdateProd = $pdo->prepare('update products set qty_on_hand = :qty where id = :id');
+                $stmtUpdateProd = $pdo->prepare('update products set qty_on_hand = :qty, updated_at = now() where id = :id');
                 foreach ($items as $i) {
                     $stmtItem->execute([
                         ':oid' => $orderId,

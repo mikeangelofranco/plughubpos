@@ -24,6 +24,7 @@ begin
     set name = excluded.name,
         active = excluded.active;
 end
+$$;
 
 
 create table if not exists users (
@@ -154,12 +155,18 @@ create table if not exists products (
   cost_cents integer not null default 0 check (cost_cents >= 0),
   qty_on_hand integer not null default 0 check (qty_on_hand >= 0),
   active boolean not null default true,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  price_updated_at timestamptz null,
+  price_updated_by bigint null references users(id) on delete set null
 );
 
 alter table products add column if not exists tenant_id bigint references tenants(id) on delete set null;
 alter table products add column if not exists qty_on_hand integer not null default 0;
 alter table products add column if not exists cost_cents integer not null default 0;
+alter table products add column if not exists updated_at timestamptz not null default now();
+alter table products add column if not exists price_updated_at timestamptz null;
+alter table products add column if not exists price_updated_by bigint references users(id) on delete set null;
 
 do $$
 begin
@@ -184,6 +191,24 @@ $$;
 create index if not exists products_active_idx on products(active);
 create index if not exists products_name_idx on products(lower(name));
 create index if not exists products_tenant_idx on products(tenant_id);
+create index if not exists products_price_updated_at_idx on products(price_updated_at desc nulls last);
+
+-- Price change audit
+create table if not exists price_change_audit (
+  id bigserial primary key,
+  product_id bigint not null references products(id) on delete cascade,
+  tenant_id bigint null references tenants(id) on delete set null,
+  old_price_cents integer not null check (old_price_cents >= 0),
+  new_price_cents integer not null check (new_price_cents >= 0),
+  changed_by bigint null references users(id) on delete set null,
+  reason text null,
+  device_id text null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists price_change_audit_product_idx on price_change_audit(product_id);
+create index if not exists price_change_audit_tenant_idx on price_change_audit(tenant_id);
+create index if not exists price_change_audit_created_idx on price_change_audit(created_at desc);
 
 -- Inventory movements (ledger)
 create table if not exists inventory_movements (

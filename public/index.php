@@ -194,8 +194,28 @@ switch ($path) {
         $role = $user['role'] ?? '';
 
         if (Auth::isAdmin()) {
-            $stmt = $pdo->query('select id, name, active, address, contact_number from tenants order by lower(name)');
+            $stmt = $pdo->query('select id, name, slug, active, address, contact_number from tenants order by lower(name)');
             $tenants = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+            $hasTenantSelection = array_key_exists('active_tenant_id', $_SESSION);
+            if ($tenantId === null && !$hasTenantSelection && $tenants) {
+                $defaultTenant = null;
+                foreach ($tenants as $t) {
+                    $slug = is_string($t['slug'] ?? null) ? strtolower($t['slug']) : '';
+                    if ($slug === 'default') {
+                        $defaultTenant = $t;
+                        break;
+                    }
+                }
+                if ($defaultTenant === null) {
+                    $activeTenants = array_values(array_filter($tenants, static fn ($t) => (bool) ($t['active'] ?? true)));
+                    $defaultTenant = $activeTenants[0] ?? $tenants[0] ?? null;
+                }
+                $defaultTenantId = isset($defaultTenant['id']) ? (int) $defaultTenant['id'] : 0;
+                if ($defaultTenantId > 0) {
+                    $tenantId = $defaultTenantId;
+                    Auth::setActiveTenant($tenantId);
+                }
+            }
             if ($tenantId !== null) {
                 $match = array_values(array_filter($tenants, static fn ($t) => (int) ($t['id'] ?? 0) === (int) $tenantId));
                 if ($match) {
@@ -220,7 +240,7 @@ switch ($path) {
         }
 
         echo view('pos', [
-            'title' => env('APP_NAME', 'Plughub POS Mobile'),
+            'title' => 'Mobile POS',
             'user' => $user,
             'flash' => Session::flash('success'),
             'flash_error' => Session::flash('error'),
@@ -265,7 +285,7 @@ switch ($path) {
         }
 
         echo view('login', [
-            'title' => env('APP_NAME', 'Plughub POS Mobile'),
+            'title' => 'Mobile POS',
             'error' => $error,
             'username' => $username,
         ]);
@@ -1775,7 +1795,7 @@ switch ($path) {
         http_response_code(404);
         header('Content-Type: text/html; charset=utf-8');
         echo view('not_found', [
-            'title' => env('APP_NAME', 'Plughub POS Mobile'),
+            'title' => 'Mobile POS',
             'path' => $path,
         ]);
         break;

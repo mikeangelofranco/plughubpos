@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 declare(strict_types=1);
 
 require __DIR__ . '/../src/bootstrap.php';
@@ -220,7 +220,7 @@ switch ($path) {
         }
 
         echo view('pos', [
-            'title' => env('APP_NAME', 'Plughub POS Mobile'),
+            'title' => 'Mobile POS',
             'user' => $user,
             'flash' => Session::flash('success'),
             'flash_error' => Session::flash('error'),
@@ -265,7 +265,7 @@ switch ($path) {
         }
 
         echo view('login', [
-            'title' => env('APP_NAME', 'Plughub POS Mobile'),
+            'title' => 'Mobile POS',
             'error' => $error,
             'username' => $username,
         ]);
@@ -1775,8 +1775,10 @@ switch ($path) {
         http_response_code(404);
         header('Content-Type: text/html; charset=utf-8');
         echo view('not_found', [
-            'title' => env('APP_NAME', 'Plughub POS Mobile'),
+            'title' => 'Mobile POS',
             'path' => $path,
         ]);
         break;
 }
+
+

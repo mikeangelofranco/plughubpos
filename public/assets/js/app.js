@@ -587,7 +587,7 @@
   </head>
   <body>
     <pre>
-             PLUGHUB GADGETS & ACCESSORIES
+             ${escapeText(data.tenantName || "Plughub POS")}
                 OFFICIAL SALES RECEIPT
 ${data.tenantAddress ? `\n${escapeText(data.tenantAddress)}` : ""}${data.tenantContact ? `\n${escapeText(data.tenantContact)}` : ""}
 \nReceipt No : ${escapeText(data.receiptNo)}
@@ -2228,4 +2228,102 @@ Powered by PlugHub POS
   if (els.posScreen) {
     loadData();
   }
+})();
+
+(() => {
+  const root = document.querySelector("[data-login-screen]");
+  if (!root) return;
+
+  const usernameInput = root.querySelector("[data-login-username]");
+  const passwordInput = root.querySelector("[data-login-password]");
+  const fillBtn = root.querySelector("[data-demo-fill]");
+  const copyBtn = root.querySelector("[data-demo-copy]");
+  const resetBtn = root.querySelector("[data-demo-reset]");
+  const demoUsernameInput = root.querySelector("[data-demo-username]");
+  const demoPasswordInput = root.querySelector("[data-demo-password]");
+  const loginToggle = root.querySelector("[data-toggle-login-password]");
+  const demoToggle = root.querySelector("[data-toggle-demo-password]");
+
+  const demoUsername = "admin";
+  const demoPassword = "Admin123!";
+
+  const ensureToastStack = () => {
+    let stack = document.querySelector(".toast-stack");
+    if (!stack) {
+      stack = document.createElement("div");
+      stack.className = "toast-stack";
+      document.body.appendChild(stack);
+    }
+    return stack;
+  };
+
+  const showToast = (message, variant = "info") => {
+    const stack = ensureToastStack();
+    const toast = document.createElement("div");
+    toast.className = `toast toast-${variant}`;
+    toast.textContent = message;
+    stack.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add("show"));
+    setTimeout(() => {
+      toast.classList.remove("show");
+      setTimeout(() => toast.remove(), 200);
+    }, 2600);
+  };
+
+  const applyDemoCredentials = () => {
+    if (usernameInput) usernameInput.value = demoUsername;
+    if (passwordInput) passwordInput.value = demoPassword;
+    passwordInput?.focus();
+    showToast("Demo credentials applied", "success");
+  };
+
+  const copyToClipboard = async (text) => {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+    const helper = document.createElement("textarea");
+    helper.value = text;
+    helper.setAttribute("readonly", "true");
+    helper.style.position = "fixed";
+    helper.style.opacity = "0";
+    document.body.appendChild(helper);
+    helper.select();
+    const ok = document.execCommand("copy");
+    helper.remove();
+    return ok;
+  };
+
+  const handleCopy = async () => {
+    const text = `Username: ${demoUsername} Password: ${demoPassword}`;
+    try {
+      const ok = await copyToClipboard(text);
+      showToast(ok ? "Credentials copied" : "Copy failed", ok ? "success" : "error");
+    } catch (err) {
+      showToast("Copy failed", "error");
+    }
+  };
+
+  const resetFields = () => {
+    if (usernameInput) usernameInput.value = "";
+    if (passwordInput) passwordInput.value = "";
+    usernameInput?.focus();
+  };
+
+  const togglePassword = (input, button) => {
+    if (!input || !button) return;
+    const shouldShow = input.type === "password";
+    input.type = shouldShow ? "text" : "password";
+    button.textContent = shouldShow ? "Hide" : "Show";
+    button.setAttribute("aria-pressed", shouldShow ? "true" : "false");
+  };
+
+  if (demoUsernameInput) demoUsernameInput.value = demoUsername;
+  if (demoPasswordInput) demoPasswordInput.value = demoPassword;
+
+  fillBtn?.addEventListener("click", applyDemoCredentials);
+  copyBtn?.addEventListener("click", handleCopy);
+  resetBtn?.addEventListener("click", resetFields);
+  loginToggle?.addEventListener("click", () => togglePassword(passwordInput, loginToggle));
+  demoToggle?.addEventListener("click", () => togglePassword(demoPasswordInput, demoToggle));
 })();

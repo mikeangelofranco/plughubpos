@@ -32,7 +32,7 @@ $roleLabel = ucfirst($roleLower ?: 'Role');
         </button>
       </div>
       <div class="brand-text">
-        <div class="brand-name"><?= e($title ?? 'Plughub POS Mobile') ?></div>
+        <div class="brand-name"><?= e($title ?? 'Mobile POS') ?></div>
         <div class="brand-sub">Multi-tenant mode</div>
       </div>
       <div class="user-chip">
@@ -75,7 +75,7 @@ $roleLabel = ucfirst($roleLower ?: 'Role');
     <aside class="nav-drawer" data-menu-drawer role="dialog" aria-modal="true" aria-label="Plughub POS menu" aria-hidden="true">
       <div class="nav-drawer-header">
         <div class="nav-app">
-          <div class="nav-app-name">Plughub POS Mobile</div>
+          <div class="nav-app-name">Mobile POS</div>
           <div class="nav-app-sub">One-hand friendly shortcuts</div>
         </div>
         <button class="nav-close" type="button" data-menu-close aria-label="Close menu">&#10005;</button>

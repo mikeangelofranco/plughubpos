@@ -1,4 +1,4 @@
-# Plughub POS Mobile (mobile-first)
+﻿# Mobile POS (mobile-first)
 
 ## Requirements
 - PHP 8.1+ (PDO pgsql enabled)
@@ -29,3 +29,4 @@
 ## Branding
 - Logo used across screens lives at `public/assets/img/logo.svg` (PNG fallback optional).
   - Replace that file with your provided logo to update branding.
+

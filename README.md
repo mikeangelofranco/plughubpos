@@ -1,4 +1,4 @@
-# Plughub POS Mobile (mobile-first)
+# Mobile POS (mobile-first)
 
 ## Requirements
 - PHP 8.1+ (PDO pgsql enabled)

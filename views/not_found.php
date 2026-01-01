@@ -6,9 +6,9 @@ ob_start();
 <header class="topbar">
   <div class="brand">
     <div class="brand-main">
-      <img class="brand-logo" src="/assets/img/logo.svg" alt="Plughub POS logo" />
+      <img class="brand-logo" src="/assets/img/plughubpos-logo.jpg" alt="Plughub POS logo" />
       <div class="brand-text">
-        <h1><?= e($title ?? 'Plughub POS Mobile') ?></h1>
+        <h1><?= e($title ?? 'Mobile POS') ?></h1>
         <div class="brand-sub">Page not found</div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 declare(strict_types=1);
 
 ob_start();
@@ -9,7 +9,7 @@ $flash = Session::flash('success');
     <div class="brand-main">
       <img class="brand-logo" src="/assets/img/logo.svg" alt="Plughub POS logo" />
       <div class="brand-text">
-        <h1><?= e($title ?? 'Plughub POS Mobile') ?></h1>
+        <h1><?= e($title ?? 'Mobile POS') ?></h1>
         <div class="brand-sub">POS on the go</div>
       </div>
     </div>
@@ -19,7 +19,7 @@ $flash = Session::flash('success');
 
 <main class="content content-center">
   <div class="hero-tagline">
-    <span class="hero-icon">🛒</span>
+    <span class="hero-icon">ðŸ›’</span>
     <span>Sell smarter. Track everything.</span>
   </div>
 
@@ -37,12 +37,12 @@ $flash = Session::flash('success');
     <form method="post" class="form">
       <input type="hidden" name="_csrf" value="<?= e(Csrf::token()) ?>" />
 
-      <div class="microcopy">Welcome back 👋</div>
+      <div class="microcopy">Welcome back ðŸ‘‹</div>
 
       <label class="label">
         <span>Username</span>
         <div class="input-wrap">
-          <span class="input-icon">👤</span>
+          <span class="input-icon">ðŸ‘¤</span>
           <input class="input icon" name="username" autocomplete="username" inputmode="text" value="<?= e((string) ($username ?? '')) ?>" />
         </div>
       </label>
@@ -50,18 +50,18 @@ $flash = Session::flash('success');
       <label class="label">
         <span>Password</span>
         <div class="input-wrap">
-          <span class="input-icon">🔒</span>
+          <span class="input-icon">ðŸ”’</span>
           <input class="input icon" type="password" name="password" autocomplete="current-password" />
         </div>
       </label>
 
       <button class="btn btn-primary" type="submit">Login</button>
-      <div class="meta-line">Fast • Simple • Reliable</div>
+      <div class="meta-line">Fast â€¢ Simple â€¢ Reliable</div>
     </form>
   </section>
 
   <div class="trustline">
-    <span>🔒</span>
+    <span>ðŸ”’</span>
     <span>Secure login powered by PlugHub</span>
   </div>
 </main>
@@ -69,3 +69,4 @@ $flash = Session::flash('success');
 <?php
 $content = ob_get_clean();
 require __DIR__ . '/layout.php';
+

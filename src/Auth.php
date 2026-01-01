@@ -121,7 +121,11 @@ final class Auth
             'full_name' => is_string($row['full_name'] ?? null) ? $row['full_name'] : null,
             'contact_number' => is_string($row['contact_number'] ?? null) ? $row['contact_number'] : null,
         ];
-        $_SESSION['active_tenant_id'] = strcasecmp($role, 'Admin') === 0 ? null : (isset($row['tenant_id']) ? (int) $row['tenant_id'] : null);
+        if (strcasecmp($role, 'Admin') === 0) {
+            unset($_SESSION['active_tenant_id']);
+        } else {
+            $_SESSION['active_tenant_id'] = isset($row['tenant_id']) ? (int) $row['tenant_id'] : null;
+        }
         return true;
     }
 

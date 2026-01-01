@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 declare(strict_types=1);
 
 ob_start();
@@ -32,7 +32,7 @@ $roleLabel = ucfirst($roleLower ?: 'Role');
         </button>
       </div>
       <div class="brand-text">
-        <div class="brand-name"><?= e($title ?? 'Plughub POS Mobile') ?></div>
+        <div class="brand-name"><?= e($title ?? 'Mobile POS') ?></div>
         <div class="brand-sub">Multi-tenant mode</div>
       </div>
       <div class="user-chip">
@@ -75,7 +75,7 @@ $roleLabel = ucfirst($roleLower ?: 'Role');
     <aside class="nav-drawer" data-menu-drawer role="dialog" aria-modal="true" aria-label="Plughub POS menu" aria-hidden="true">
       <div class="nav-drawer-header">
         <div class="nav-app">
-          <div class="nav-app-name">Plughub POS Mobile</div>
+          <div class="nav-app-name">Mobile POS</div>
           <div class="nav-app-sub">One-hand friendly shortcuts</div>
         </div>
         <button class="nav-close" type="button" data-menu-close aria-label="Close menu">&#10005;</button>
@@ -230,7 +230,7 @@ $roleLabel = ucfirst($roleLower ?: 'Role');
           <span class="icon">&#128722;</span>
           <span class="count" data-cart-count>0 items</span>
         </div>
-          <span class="total" data-cart-total>₱0.00</span>
+          <span class="total" data-cart-total>â‚±0.00</span>
       </div>
       <button class="btn btn-primary" type="button" data-view-cart>View Cart</button>
     </div>
@@ -240,7 +240,7 @@ $roleLabel = ucfirst($roleLower ?: 'Role');
 <div class="cart-overlay" data-cart-overlay>
   <div class="cart-drawer">
     <div class="drawer-header">
-      <button class="drawer-back" type="button" data-cart-close aria-label="Close cart">←</button>
+      <button class="drawer-back" type="button" data-cart-close aria-label="Close cart">â†</button>
       <div class="drawer-title">Cart</div>
       <div class="drawer-icon">&#128722;</div>
     </div>
@@ -248,22 +248,22 @@ $roleLabel = ucfirst($roleLower ?: 'Role');
     <div class="cart-totals">
       <div class="cart-line">
         <div class="label">Subtotal</div>
-        <div class="value" data-cart-subtotal>₱0.00</div>
+        <div class="value" data-cart-subtotal>â‚±0.00</div>
       </div>
       <div class="cart-line">
-        <div class="label">Discount (₱)</div>
+        <div class="label">Discount (â‚±)</div>
         <div class="discount-ctrl">
           <button class="btn btn-ghost" type="button" data-discount-dec>-</button>
           <input class="discount-input" type="number" min="0" step="0.01" inputmode="decimal" data-discount-input aria-label="Discount amount" />
           <button class="btn btn-ghost" type="button" data-discount-inc>+</button>
         </div>
-        <div class="value" data-cart-discount>₱0.00</div>
+        <div class="value" data-cart-discount>â‚±0.00</div>
       </div>
     </div>
     <div class="cart-footer">
       <div>
         <div class="label">Total</div>
-        <div class="total" data-cart-total-drawer>₱0.00</div>
+        <div class="total" data-cart-total-drawer>â‚±0.00</div>
       </div>
       <button class="btn btn-primary btn-elevated" type="button" data-start-checkout>Checkout</button>
     </div>
@@ -272,15 +272,15 @@ $roleLabel = ucfirst($roleLower ?: 'Role');
 
 <div class="screen checkout-screen is-hidden" data-checkout-screen>
   <header class="checkout-bar">
-    <button class="drawer-back" type="button" data-checkout-back aria-label="Back to cart">←</button>
+    <button class="drawer-back" type="button" data-checkout-back aria-label="Back to cart">â†</button>
     <div class="checkout-title">Checkout</div>
-    <div class="checkout-icon" aria-hidden="true">💳</div>
+    <div class="checkout-icon" aria-hidden="true">ðŸ’³</div>
   </header>
 
   <main class="checkout-body">
     <section class="panel checkout-total">
       <div class="label">Total To Pay</div>
-      <div class="amount" data-checkout-total>₱0.00</div>
+      <div class="amount" data-checkout-total>â‚±0.00</div>
       <div class="note">(Discount already applied)</div>
     </section>
 
@@ -288,14 +288,14 @@ $roleLabel = ucfirst($roleLower ?: 'Role');
       <div class="section-title">Select Payment Method</div>
       <div class="pay-options">
         <button class="pay-btn active" type="button" data-pay-method="cash">
-          <span class="pay-icon">💵</span>
+          <span class="pay-icon">ðŸ’µ</span>
           <span>Cash</span>
-          <span class="pay-check" aria-hidden="true">✓</span>
+          <span class="pay-check" aria-hidden="true">âœ“</span>
         </button>
         <button class="pay-btn" type="button" data-pay-method="qr">
-          <span class="pay-icon">🔲</span>
+          <span class="pay-icon">ðŸ”²</span>
           <span>QR Code</span>
-          <span class="pay-check" aria-hidden="true">✓</span>
+          <span class="pay-check" aria-hidden="true">âœ“</span>
         </button>
       </div>
     </section>
@@ -304,11 +304,11 @@ $roleLabel = ucfirst($roleLower ?: 'Role');
       <div class="section-title">Payment Summary</div>
       <div class="summary-row">
         <span>Subtotal</span>
-        <span data-checkout-subtotal>₱0.00</span>
+        <span data-checkout-subtotal>â‚±0.00</span>
       </div>
       <div class="summary-row">
         <span>Discount</span>
-        <span data-checkout-discount>₱0.00</span>
+        <span data-checkout-discount>â‚±0.00</span>
       </div>
       <div class="divider"></div>
       <div class="summary-row due">
@@ -316,14 +316,14 @@ $roleLabel = ucfirst($roleLower ?: 'Role');
           <div class="micro-label">Amount to collect</div>
           <div class="label-strong">Total Due</div>
         </div>
-        <div class="due-amount" data-checkout-due>₱0.00</div>
+        <div class="due-amount" data-checkout-due>â‚±0.00</div>
       </div>
     </section>
     <section class="panel">
       <button class="btn btn-primary btn-elevated btn-block btn-confirm" type="button" data-confirm-payment>
-        <span class="btn-icon">🔒</span>
+        <span class="btn-icon">ðŸ”’</span>
         Confirm Payment
-        <span class="btn-check">✓</span>
+        <span class="btn-check">âœ“</span>
       </button>
       <div class="btn-note">Payment will be recorded</div>
     </section>
@@ -333,7 +333,7 @@ $roleLabel = ucfirst($roleLower ?: 'Role');
 <div class="cash-overlay is-hidden" data-cash-overlay>
   <div class="cash-sheet">
     <header class="cash-header">
-      <button class="drawer-back" type="button" data-cash-close aria-label="Back to checkout">←</button>
+      <button class="drawer-back" type="button" data-cash-close aria-label="Back to checkout">â†</button>
       <div>
         <div class="checkout-title">Enter Amount Received</div>
         <div class="cash-subtitle">Tap a quick amount or choose exact</div>
@@ -345,32 +345,32 @@ $roleLabel = ucfirst($roleLower ?: 'Role');
           <div class="micro-label">Amount to collect</div>
           <div class="label-strong">Total Due</div>
         </div>
-        <div class="cash-amount cash-due-value" data-cash-due>₱0.00</div>
+        <div class="cash-amount cash-due-value" data-cash-due>â‚±0.00</div>
       </div>
       <div class="cash-grid" data-cash-buttons>
-        <button class="pill cash-btn" type="button" data-cash-amount="100000">₱1,000</button>
-        <button class="pill cash-btn" type="button" data-cash-amount="50000">₱500</button>
-        <button class="pill cash-btn" type="button" data-cash-amount="20000">₱200</button>
-        <button class="pill cash-btn" type="button" data-cash-amount="10000">₱100</button>
-        <button class="pill cash-btn" type="button" data-cash-amount="5000">₱50</button>
+        <button class="pill cash-btn" type="button" data-cash-amount="100000">â‚±1,000</button>
+        <button class="pill cash-btn" type="button" data-cash-amount="50000">â‚±500</button>
+        <button class="pill cash-btn" type="button" data-cash-amount="20000">â‚±200</button>
+        <button class="pill cash-btn" type="button" data-cash-amount="10000">â‚±100</button>
+        <button class="pill cash-btn" type="button" data-cash-amount="5000">â‚±50</button>
         <button class="pill cash-btn accent" type="button" data-cash-amount="enter">Enter Amount</button>
       </div>
       <div class="divider-line"></div>
       <div class="cash-input-row is-hidden" data-cash-input-row>
         <label class="cash-input-label" for="cash-input">Type amount</label>
         <div class="cash-input-wrap">
-          <span class="prefix">₱</span>
+          <span class="prefix">â‚±</span>
           <input id="cash-input" class="cash-input" type="number" min="0" step="0.01" inputmode="decimal" data-cash-input placeholder="0.00" />
         </div>
       </div>
       <div class="divider-line"></div>
       <div class="cash-line">
         <span>Cash Amount:</span>
-        <span class="cash-amount" data-cash-amount-display>₱0.00</span>
+        <span class="cash-amount" data-cash-amount-display>â‚±0.00</span>
       </div>
       <div class="cash-line" data-cash-line>
         <span class="cash-change-label" data-cash-change-label>Change:</span>
-        <span class="cash-change" data-cash-change>₱0.00</span>
+        <span class="cash-change" data-cash-change>â‚±0.00</span>
       </div>
       <button class="btn btn-primary btn-elevated btn-block" type="button" data-complete-sale>Complete Sale</button>
     </div>
@@ -380,11 +380,11 @@ $roleLabel = ucfirst($roleLower ?: 'Role');
 <div class="screen complete-screen is-hidden" data-sale-complete-screen>
   <header class="complete-bar">
     <div class="complete-left">
-      <span class="complete-icon">✅</span>
+      <span class="complete-icon">âœ…</span>
       <div>
         <div class="complete-title">Sale Complete</div>
         <div class="complete-sub">Payment received successfully.</div>
-        <div class="complete-meta" data-complete-ts>—</div>
+        <div class="complete-meta" data-complete-ts>â€”</div>
       </div>
     </div>
   </header>
@@ -393,43 +393,43 @@ $roleLabel = ucfirst($roleLower ?: 'Role');
       <div class="section-title">Sale Summary</div>
       <div class="complete-hero">
         <div class="hero-label">Amount Received</div>
-        <div class="hero-amount" data-complete-paid>₱0.00</div>
+        <div class="hero-amount" data-complete-paid>â‚±0.00</div>
       </div>
       <div class="hero-sub hero-sub-outer">
-        <span class="badge badge-success" data-complete-change>Change Due ₱0.00</span>
+        <span class="badge badge-success" data-complete-change>Change Due â‚±0.00</span>
       </div>
       <div class="breakdown">
         <div class="break-row">
           <span>Sale Total</span>
-          <span data-complete-sale-total>₱0.00</span>
+          <span data-complete-sale-total>â‚±0.00</span>
         </div>
         <div class="break-row">
           <span>Amount Received</span>
-          <span data-complete-amount-received>₱0.00</span>
+          <span data-complete-amount-received>â‚±0.00</span>
         </div>
         <div class="break-row">
           <span>Change Due</span>
-          <span data-complete-change-due>₱0.00</span>
+          <span data-complete-change-due>â‚±0.00</span>
         </div>
       </div>
       <div class="summary-stack compact listy">
         <div class="stack-row">
           <span class="stack-label">Subtotal</span>
-          <span class="stack-value" data-complete-subtotal>₱0.00</span>
+          <span class="stack-value" data-complete-subtotal>â‚±0.00</span>
         </div>
         <div class="stack-row">
           <span class="stack-label">Discount Applied</span>
-          <span class="stack-value" data-complete-discount>₱0.00</span>
+          <span class="stack-value" data-complete-discount>â‚±0.00</span>
         </div>
         <div class="stack-row">
           <span class="stack-label">Change Given</span>
-          <span class="stack-value" data-complete-change-detail>₱0.00</span>
+          <span class="stack-value" data-complete-change-detail>â‚±0.00</span>
         </div>
         <div class="stack-row">
           <span class="stack-label">Items</span>
           <span class="stack-value items-action">
             <span data-complete-items>0</span>
-            <button class="link inline-link" type="button" data-view-details>View Cart ›</button>
+            <button class="link inline-link" type="button" data-view-details>View Cart â€º</button>
           </span>
         </div>
       </div>
@@ -440,14 +440,14 @@ $roleLabel = ucfirst($roleLower ?: 'Role');
       <div class="stack-row">
         <span class="stack-label">Payment Method</span>
         <span class="stack-value method">
-          <span class="method-icon" data-complete-method-icon>💵</span>
-          <span data-complete-method>—</span>
+          <span class="method-icon" data-complete-method-icon>ðŸ’µ</span>
+          <span data-complete-method>â€”</span>
         </span>
       </div>
       <div class="stack-row txn-row">
         <span class="stack-label">Transaction ID</span>
         <span class="stack-value txn">
-          <span data-complete-txn>—</span>
+          <span data-complete-txn>â€”</span>
           <button class="btn btn-ghost btn-copy" type="button" data-copy-txn>Copy</button>
         </span>
       </div>
@@ -471,7 +471,7 @@ $roleLabel = ucfirst($roleLower ?: 'Role');
         <div class="complete-sub">Completed Transaction</div>
       </div>
       <div class="complete-meta" data-complete-cart-count>0 items</div>
-      <button class="drawer-back" type="button" data-complete-cart-close aria-label="Close cart view">←</button>
+      <button class="drawer-back" type="button" data-complete-cart-close aria-label="Close cart view">â†</button>
     </header>
     <div class="complete-cart-body" data-complete-cart-list></div>
     <div class="complete-cart-summary">
@@ -479,29 +479,29 @@ $roleLabel = ucfirst($roleLower ?: 'Role');
       <div class="summary-rows">
         <div class="summary-row-line">
           <span>Subtotal</span>
-          <span data-complete-cart-subtotal>₱0.00</span>
+          <span data-complete-cart-subtotal>â‚±0.00</span>
         </div>
         <div class="summary-row-line discount">
           <span>Discount</span>
-          <span data-complete-cart-discount>₱0.00</span>
+          <span data-complete-cart-discount>â‚±0.00</span>
         </div>
         <div class="summary-row-line amount-due">
           <span>Amount Due</span>
-          <span data-complete-cart-total>₱0.00</span>
+          <span data-complete-cart-total>â‚±0.00</span>
         </div>
       </div>
       <div class="summary-rows snapshot">
         <div class="summary-row-line">
           <span>Amount Received</span>
-          <span data-complete-cart-paid>₱0.00</span>
+          <span data-complete-cart-paid>â‚±0.00</span>
         </div>
         <div class="summary-row-line">
           <span>Change Given</span>
-          <span data-complete-cart-change>₱0.00</span>
+          <span data-complete-cart-change>â‚±0.00</span>
         </div>
         <div class="summary-row-line">
           <span>Payment Method</span>
-          <span data-complete-cart-method>—</span>
+          <span data-complete-cart-method>â€”</span>
         </div>
       </div>
     </div>
@@ -523,3 +523,4 @@ $ctx = [
 $contextJson = json_encode($ctx, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
 $content = ob_get_clean() . PHP_EOL . '<script>window.__APP_CTX__ = ' . $contextJson . ';</script>';
 require __DIR__ . '/layout.php';
+

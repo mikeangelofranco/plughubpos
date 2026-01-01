@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 declare(strict_types=1);
 
 ob_start();
@@ -8,7 +8,7 @@ ob_start();
     <div class="brand-main">
       <img class="brand-logo" src="/assets/img/logo.svg" alt="Plughub POS logo" />
       <div class="brand-text">
-        <h1><?= e($title ?? 'Plughub POS Mobile') ?></h1>
+        <h1><?= e($title ?? 'Mobile POS') ?></h1>
         <div class="brand-sub">Page not found</div>
       </div>
     </div>
@@ -28,3 +28,4 @@ ob_start();
 <?php
 $content = ob_get_clean();
 require __DIR__ . '/layout.php';
+

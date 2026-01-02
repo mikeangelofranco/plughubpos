@@ -15,6 +15,17 @@ declare(strict_types=1);
     <?php if (!($hide_demo_watermark ?? false)): ?>
       <div class="demo-watermark">DEMO VERSION</div>
     <?php endif; ?>
+    <details class="support-fab" data-support-fab>
+      <summary class="support-fab__toggle" aria-label="Contact support">
+        <span class="support-fab__label">Questions?</span>
+        <span class="support-fab__icon" aria-hidden="true">?</span>
+      </summary>
+      <div class="support-fab__card">
+        <div class="support-fab__title">Contact Us</div>
+        <a class="support-fab__link" href="mailto:support@plughub-ims.com">support@plughub-ims.com</a>
+        <a class="support-fab__link" href="tel:+639927870036">+63 992 787 0036</a>
+      </div>
+    </details>
     <div class="app">
       <div class="shell">
         <?= $content ?? '' ?>
